@@ -96,14 +96,132 @@ This project explores a **minimal-attack-surface** approach:
 
 ---
 
-## Network Architecture
+---
 
-### Diagram (Mermaid)
-```mermaid
-flowchart TB
-  I[(Internet)]:::no -->|NO CONNECT| X{{WAN Disabled}}:::no
-  R[Wi-Fi Router\n(LAN only)] --> L[Laptop]
-  R --> P[Phone]
-  R --> N[NAS Server\nStatic IP: 192.168.1.10]
+## Security Configuration
 
-classDef no fill:#ffdddd,stroke:#ff0000,color:#000;
+### Network Security (Router)
+- **WAN port unused** (no uplink to ISP modem / internet source)
+- Router admin panel secured with a strong password
+- **UPnP disabled**
+- **Port forwarding disabled**
+- **WPS disabled**
+- Optional: isolate admin interface to a single trusted client MAC/IP
+
+### NAS Hardening (OMV)
+- Disable root SSH login (if SSH is enabled at all)
+- Use strong unique passwords for all accounts
+- Enable only the services you need (avoid extra plugins/services)
+- Keep file sharing limited to LAN-only interfaces
+
+### Access Control
+- No guest access
+- Create per-user accounts (or per-role accounts)
+- Use group permissions for shared folders
+- Restrict SMB/NFS access to the local subnet only
+
+---
+
+## Storage Design
+
+### Layout
+- HDDs used for primary data storage
+- NVMe SSD configured as a cache/performance layer (if enabled via OMV plugins/tools)
+
+### Rationale
+- HDDs provide affordable capacity
+- NVMe cache improves responsiveness and reduces latency for frequently accessed files
+- EXT4 chosen for stability and predictable recovery behavior
+
+> Update this section to match your exact configuration (RAID level, pooling, filesystem, cache mode).
+
+---
+
+## Build Process
+
+### 1) Hardware Assembly
+- Installed drives (HDDs + NVMe)
+- Checked power delivery and SATA/NVMe detection
+- Verified airflow/cooling to handle sustained disk activity
+
+### 2) BIOS/UEFI Configuration
+- Enabled **AHCI**
+- Confirmed NVMe is detected
+- Disabled unused boot devices (optional)
+- Verified boot order (USB first for install, then OS drive)
+
+### 3) OMV Installation (Offline)
+- Installed OMV using a bootable USB
+- **No internet connection during setup**
+- Completed initial admin setup locally
+
+### 4) Network Setup
+- Connected NAS to the isolated router LAN
+- Assigned a **static IP** (example: `192.168.1.10`)
+- Verified that there is **no default route** to the internet
+
+### 5) Storage Configuration
+- Wiped/initialized disks
+- Created filesystem(s) and mount points
+- Configured cache layer (if applicable)
+
+### 6) Services and Shares
+- Enabled **SMB/CIFS**
+- Created users + groups
+- Created shared folders with proper permissions
+- Tested access from laptop/phone over Wi-Fi
+
+---
+
+## Validation
+
+### Isolation Tests
+Confirm the NAS is not able to reach the public internet:
+- No WAN cable connected
+- No port forwarding / UPnP
+- Attempt external DNS resolution / ping (should fail unless you intentionally provide local DNS)
+
+### Functionality Tests
+- Connect a laptop/phone to the router Wi-Fi
+- Access SMB share via LAN IP
+- Transfer files (single + multiple) and confirm stability
+- Reboot NAS/router and confirm it still works without internet
+
+---
+
+## Limitations
+- No remote access (by design)
+- Manual maintenance/updates
+- Requires local access for administration and troubleshooting
+
+---
+
+## Future Improvements
+- Optional VPN gateway (still offline-by-default; only enabled when needed)
+- Full disk encryption (LUKS) for data-at-rest protection
+- Monitoring + alerts (LAN-only dashboards)
+- Automated local backups (offline rotation drive + checksum verification)
+
+---
+
+## Use Cases
+- Personal secure storage
+- Academic data archiving
+- Offline media server
+- Low-trust environments where WAN exposure is unacceptable
+
+---
+
+## Conclusion
+This project shows that a NAS can be **secure and practical without being internet-connected**. By enforcing isolation at the network level and minimizing services, the system reduces attack surface while maintaining convenient wireless access locally.
+
+---
+
+## License
+MIT
+
+---
+
+## Author
+**Ali Amhaz**  
+Computer Engineering Student
